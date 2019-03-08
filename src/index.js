@@ -1,9 +1,12 @@
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 const _ = require("lodash")
 const path = require("path")
 const Chunk = require("webpack/lib/Chunk")
 const config = require("./config")
 const Fontello = require("./Fontello")
 const Css = require("./Css")
+
+const FONTELLO_PLUGIN = 'FontelloPlugin'
 
 // https://github.com/jantimon/html-webpack-plugin/blob/master/index.js#L98
 function getPublicPath(compilation) {
@@ -26,7 +29,7 @@ class FontelloPlugin {
 		const { output } = this.options
 		const chunk = this.chunk
 		const fontello = new Fontello(this.options)
-		compiler.hooks.make.tapAsync("FontelloPlugin", (compilation, cb) => {
+		compiler.hooks.make.tapAsync(FONTELLO_PLUGIN, (compilation, cb) => {
 			const cssFile = compilation.getPath(output.css, { chunk })
 			const fontFile = ext => (
 				compilation.getPath(output.font, { chunk })
@@ -48,12 +51,23 @@ class FontelloPlugin {
 					}
 				})
 				.then(() => cb())
-			compilation.hooks.htmlWebpackPluginBeforeHtmlGeneration.tapAsync("FontelloPlugin", (data, cb) => {
-				console.log(getPublicPath(compilation))
-				data.assets.css.push(getPublicPath(compilation) + cssFile)
-				cb(null, data)
-			})
-			compilation.hooks.additionalAssets.tapAsync("FontelloPlugin", cb => {
+			if (compilation.hooks) {
+				if (compilation.hooks.htmlWebpackPluginBeforeHtmlGeneration) {
+					compilation.hooks.htmlWebpackPluginBeforeHtmlGeneration.tapAsync(FONTELLO_PLUGIN, (data, cb) => {
+						console.log(getPublicPath(compilation))
+						data.assets.css.push(getPublicPath(compilation) + cssFile)
+						cb(null, data)
+					})
+				} else {
+					const hooks = HtmlWebpackPlugin.getHooks(compilation)
+					hooks.beforeAssetTagGeneration.tapAsync(FONTELLO_PLUGIN, (data, cb) => {
+						console.log(getPublicPath(compilation))
+						data.assets.css.push(getPublicPath(compilation) + cssFile)
+						cb(null, data)
+					})
+				}
+			}
+			compilation.hooks.additionalAssets.tapAsync(FONTELLO_PLUGIN, cb => {
 				compilation.chunks.push(chunk)
 				compilation.namedChunks[this.options.name] = chunk
 				cb()
