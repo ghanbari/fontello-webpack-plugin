@@ -1,7 +1,9 @@
 const _ = require("lodash")
 const FontTypes = require("./FontTypes")
 
-const FONT_SRC = (font, format) => `url("./${font}")${format ? ` format("${format}")` : ""}`
+const QUERY_STRING = () => `?${_.random(0000000000, 1000000000)}`
+
+const FONT_SRC = (font, format) => `url("./${font}${QUERY_STRING()}")${format ? ` format("${format}")` : ""}`
 
 const FONT_FACE_CSS = ({ fontFamily, sources, source }) => `
 @font-face {
