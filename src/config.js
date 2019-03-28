@@ -2,7 +2,7 @@ const _ = require("lodash")
 const FontTypes = require("./FontTypes")
 
 const defaults = {
-	config: undefined,
+	configPath: undefined,
 	name: "icons",
 	className: "",
 	fonts: _.keys(FontTypes),
